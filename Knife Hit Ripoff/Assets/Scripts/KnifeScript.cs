@@ -15,10 +15,13 @@ public class KnifeScript : MonoBehaviour
     //the collider attached to Knife
     private BoxCollider2D knifeCollider;
 
+    public GameObject Knife;
+
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         knifeCollider = GetComponent<BoxCollider2D>();
+        Knife.transform.Rotate(0f, 0f, 45f, Space.Self);
     }
 
     void Update()
@@ -45,32 +48,43 @@ public class KnifeScript : MonoBehaviour
         isActive = false;
 
         //collision with a log
-        if (collision.collider.tag == "Log")
+        if (collision.collider.tag == "Knife")
         {
+            //Game Over
+            GameController.Instance.StartGameOverSequence(false);
+            //start rapidly moving downwards
+            rb.velocity = new Vector2(rb.velocity.x, -2);
+            
+        }
+        else if (collision.collider.tag == "Log")
+        {
+            if (collision.collider.tag == "Knife")
+            {
+                //Game Over
+                GameController.Instance.StartGameOverSequence(false);
+                //start rapidly moving downwards
+                rb.velocity = new Vector2(rb.velocity.x, -2);
+
+            }
             //play the particle effect on collision,
             //you don't always have to store the component in a field...
             GetComponent<ParticleSystem>().Play();
 
+            //this will automatically inherit rotation of the new parent (log)
+            transform.SetParent(collision.collider.transform);
+            rb.bodyType = RigidbodyType2D.Kinematic;
             //stop the knife
             rb.velocity = new Vector2(0, 0);
-            //this will automatically inherit rotation of the new parent (log)
-            rb.bodyType = RigidbodyType2D.Kinematic;
-            transform.SetParent(collision.collider.transform);
+            
 
             //move the collider away from the blade which is stuck in the log
-            knifeCollider.offset = new Vector2(knifeCollider.offset.x, -0.4f);
-            knifeCollider.size = new Vector2(knifeCollider.size.x, 1.2f);
+            //knifeCollider.offset = new Vector2(knifeCollider.offset.x, -0.4f);
+            //knifeCollider.size = new Vector2(knifeCollider.size.x, 1.2f);
 
             //Spawn another knife
             GameController.Instance.OnSuccessfulKnifeHit();
         }
         //collision with another knife
-        else if (collision.collider.tag == "Knife")
-        {
-            //start rapidly moving downwards
-            rb.velocity = new Vector2(rb.velocity.x, -2);
-            //Game Over
-            GameController.Instance.StartGameOverSequence(false);
-        }
+        
     }
 }
